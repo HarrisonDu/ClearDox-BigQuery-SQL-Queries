@@ -1,0 +1,90 @@
+--Do by pipeline stage, count(deal) by stage, and by salesperson
+
+/*SELECT DISTINCT t.name,email, demoConv, interestTrialConv, PipelineContractConv,
+DiscoveryCompDate, PipelineContractEntryDate, DemoCompDate, IntInTrialDate*/
+DECLARE stageLatter int64;
+SELECT company_name,max(master.MQL_Date) as MQL_Date FROM
+(SELECT SQL/MQL as SQL_Conversion,
+*,
+ABS(DATE_DIFF(MQL_Date,SQL_Conversion_Date, day)) as daysInMQL,
+ABS(DATE_DIFF(SQL_Conversion_Date,DateDiscoveryEntered, day)) as daysInSQLNoDeal,
+ABS(DATE_DIFF(DateDiscoveryEntered,DateDemoEntered, day)) as daysInDiscovery,
+ABS(DATE_DIFF(DateDemoEntered,DateInterestedInTrialEntered,day)) as daysInDemo,
+ABS(DATE_DIFF(DateInterestedInTrialEntered,DateInTrialEntered,day)) as daysInInterestedInTrial,
+ABS(DATE_DIFF(DateInTrialEntered,DateContractEntered,day)) as daysInTrial,
+
+FROM (SELECT t.company_name,t.owner_id,AVG(disConv) as disConv,
+AVG(demoConv) as demoConv, AVG(intConv) as intConv, AVG(trialConv) as trialConv, AVG(contractConv) as contractConv,SUM(t.SQL) as SQL, COUNT(t.MQL) as MQL, COUNT(*) as Total, name, t.SQL_Conversion_Date,t.mql_date as MQL_Date,
+t.DateInterestedInTrialEntered,
+t.DateDiscoveryEntered,
+t.DateDemoEntered,
+t.DateInTrialEntered,
+t.DateContractEntered
+
+FROM (SELECT DISTINCT c.Company_Name as company_name,d.hubspot_owner_id as owner_id,CONCAT(d.firstName,' ',d.lastName) as name,a.Date_entered__Discovery_completed__Sales_Pipeline__ as DateDiscoveryEntered,
+a.Date_entered__Demo_completed__Sales_Pipeline__ as DateDemoEntered,
+a.Date_entered__Interested_in_trial__Sales_Pipeline__ as DateInterestedInTrialEntered,
+a.Date_entered__In_trial__Sales_Pipeline__ as DateInTrialEntered,
+a.Date_entered__Contract__Sales_Pipeline__ as DateContractEntered,
+
+c.First_Conversion_Date as MQL_Date,c.Contact_ID as contact,c.First_Deal_Created_Date as SQL_Conversion_Date,
+
+CASE
+  WHEN a.id IS NOT NULL THEN 1
+  ELSE 0
+END AS SQL,
+
+CASE
+  WHEN c.First_Conversion_Date IS NOT NULL THEN 1
+  ELSE 0
+END AS MQL,
+
+CASE
+  WHEN a.Date_entered__Discovery_completed__Sales_Pipeline__ IS NOT NULL THEN 1
+  ELSE 0
+END AS disConv,
+
+
+CASE
+  WHEN a.Date_entered__Demo_completed__Sales_Pipeline__ IS NOT NULL THEN 1
+  ELSE 0
+END AS demoConv,
+
+CASE
+  WHEN a.Date_entered__Interested_in_trial__Sales_Pipeline__ IS NOT NULL THEN 1
+  ELSE 0
+END AS intConv,
+
+CASE
+  WHEN a.Date_entered__In_trial__Sales_Pipeline__ IS NOT NULL THEN 1
+  ELSE 0
+END AS trialConv,
+
+CASE
+  WHEN a.Date_entered__Contract__Sales_Pipeline__ IS NOT NULL THEN 1
+  ELSE 0
+END AS contractConv,
+
+
+FROM 
+`cleardox-project.ClearDox_DataSet.deal` a FULL JOIN  `cleardox-project.ClearDox_DataSet.deal_contact`b
+ON a.id = b.dealId  
+FULL JOIN `cleardox-project.ClearDox_DataSet.contact` c on b.contactID = c.Contact_ID
+INNER JOIN `cleardox-project.ClearDox_DataSet.owner` d on c.User_IDs_of_all_owners = d.hubspot_owner_id
+) as t 
+
+GROUP BY t.contact,t.SQL_Conversion_Date,t.mql_date,t.owner_id,t.company_name,
+t.DateInterestedInTrialEntered,
+t.DateDiscoveryEntered,
+t.DateDemoEntered,
+t.DateInterestedInTrialEntered,
+t.DateInTrialEntered,
+t.DateContractEntered,
+t.name)
+WHERE MQL_Date IS NOT NULL AND company_name IS NOT NULL
+ORDER BY company_name) as master
+GROUP BY master.company_name;
+
+
+
+
