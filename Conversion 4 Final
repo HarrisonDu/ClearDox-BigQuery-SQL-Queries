@@ -1,0 +1,6 @@
+--shows distinct company mql stats
+
+SELECT *
+
+FROM `cleardox-project.ClearDox_DataSet.temp_distinct` a INNER JOIN `cleardox-project.ClearDox_DataSet.temp_table` b
+ON a.company_name=b.company_name AND a.mql_date = b.mql_date
