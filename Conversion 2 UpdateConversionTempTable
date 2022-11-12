@@ -1,0 +1,41 @@
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET trialConv = 1
+WHERE contractConv=1;
+
+
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET intConv =1
+WHERE trialConv=1;
+
+
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET demoConv =1
+WHERE intConv=1;
+
+
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET disConv =1
+WHERE demoConv=1;
+
+
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET SQL_Conversion =1
+WHERE disConv=1;
+
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET DateInTrialEntered = DateContractEntered
+WHERE intConv=1 AND DateInterestedInTrialEntered IS NULL;
+
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET DateDemoEntered = DateInTrialEntered
+WHERE demoConv=1 AND DateDemoEntered IS NULL;
+
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET DateDiscoveryEntered = DateDemoEntered
+WHERE disConv=1 AND DateDiscoveryEntered IS NULL;
+
+UPDATE `cleardox-project.ClearDox_DataSet.temp_table`
+SET SQL_Conversion_Date = DateDiscoveryEntered
+WHERE SQL_Conversion=1 AND SQL_Conversion_Date IS NULL;
+
+
